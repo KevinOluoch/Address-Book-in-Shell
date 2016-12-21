@@ -11,7 +11,7 @@ echo
 add_entries(){
 	echo -n 'please enter the name\(s): '
 	read name
-	#if name exists call edit
+#if name exists call edit
 	echo -n 'Please enter $name phone number: '
 	read phone_number
 	echo -n 'Please enter $name email: '
@@ -37,9 +37,43 @@ fi
 }
 
 search (){
+# This program is supposed to search for an entry in the database
+# and list all valid results. it should then enable the user to
+# choose one result
 
-	X=2
+
+# Input the name to search (This part will be removed in future)
+  echo -n "name to search: "
+  read name
+# Start the search
+  echo search start
+# Creating a variable to count the number of results and another
+# to store the results
+  count=0
+  results=()
+
+# The following loop reads each line of the file Contacts and stores
+# the results in an array called results
+  while read -r line 
+  do
+    echo "Processing $line"
+    if [[ $line =~ $name ]] ; then
+        echo "1 $name 2 $line" 
+        count=$(( $count + 1 ))
+        echo %%%%%%%%
+        echo count $count line $line
+        echo %%%%%%% 
+        results+=($line)
+        echo =========
+        echo "${results[@]}"
+        echo --------
+    fi
+
+  done < ./Contacts
+
+  echo search end
 }
+
 edit(){
 	X=1
 }
@@ -48,3 +82,4 @@ remove(){
 }
 
 add_entries
+search
