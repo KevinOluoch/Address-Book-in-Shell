@@ -64,12 +64,46 @@ search (){
         echo count $count line $line
         echo %%%%%%% 
         results+=($line)
-        echo =========
+        echo ========
         echo "${results[@]}"
         echo --------
     fi
 
   done < ./Contacts
+
+# The user is then given an option of selecting one result
+  index=0
+# Enabling selection if more than one result is found
+  if [ $count -gt 1 ] ; then
+     echo which $name?
+     # Displaying all the results
+     for result in ${results[@]}
+        do
+        index=$(( $index + 1 ))
+        echo $index: $result
+     done
+     selected=0
+     # Reading the users selected result
+     while true
+         do
+         echo Please enter the corresponding number
+         read picked
+         if [[ $picked =~ ^0+?[1-9]+$ ]] ; then
+             if (( $picked >= 1 && $picked <= $count )) ; then
+                 break
+             fi
+         fi
+     done
+     # Displaying the result
+     echo $picked picked
+     echo ${results[$(( $picked - 1 ))]}
+# If only ine result is found, display it
+  elif [ $count -eq 1 ] ; then
+     echo ${results[picked]}
+# If no result inform the user
+  else
+     echo $name does not exist in the database
+  fi
 
   echo search end
 }
@@ -81,5 +115,5 @@ remove(){
 	X=1
 }
 
-add_entries
+#add_entries
 search
