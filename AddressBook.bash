@@ -109,11 +109,27 @@ search (){
 }
 
 edit(){
-	X=1
+# This function takes input from the user to use to change existing
+# contacts
+#search $1
+echo start edit
+old='james:45727:jhd@ddy'
+new='mary:5678:m90@wg'
+sed -i "s/$old/$new/" ./Contacts
+echo end edit
+	
 }
-remove(){
-	X=1
+
+delete(){
+# This function should enable you to delete a contact
+#
+echo start delete
+entry='kevin:56:g@G'
+sed -i "/$entry/d" ./Contacts 
+echo end delete
 }
 
 #add_entries
-search
+#search
+#edit
+delete
