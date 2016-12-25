@@ -6,16 +6,16 @@
 
 
 **Introduction**
-AddressBook.bash is a shell program that is to work as an address book.
+addressBook.sh is a shell based address book.
 
 **Features**
 
- - It should allow for address entries to be added.
+ - Creates new address entries.
  
- - It should enable editing of entries.
+ - Supports editing of existing entries.
 
- - It should be possible to search for an address.
+ - Allows searching of an address.
 
- - When creating a address, if a similar one exists, it should be possible to edit the existing one.
+ - Detect and overwrite duplicate entries
 
-**NB**: *All the features will be implemented progressively.*
+**NB**: *This is an early version of the app. Not all the features are implemented*
