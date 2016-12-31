@@ -1,8 +1,8 @@
 #!/bin/bash
 
-echo Welcome to Adress Book
+echo Welcome to Address Book
 echo it allows you to
-echo      - Search address book
+echo      - Search the Contact book
 echo      - Add entries
 echo      - Remove / edit entries
 echo
@@ -44,7 +44,7 @@ add_entries(){
                  break
               fi
               if [[ $confirmation =~  ^[Yy]$ ]]; then
-                edit $name 1
+                edit $name 
                 break
               fi
             done
@@ -107,7 +107,7 @@ add_entries(){
       then
       touch Contacts
       echo "$name:$phone_number:$email" >> Contacts
-      echo Saved Done
+      echo Saved 
     # else dicard the contact
     else
       echo The Contact was discarded
@@ -182,17 +182,31 @@ search (){
          fi
      done
      # Displaying the result
+     echo 
      echo $picked picked
-     echo ${results[$(( $picked - 1 ))]}
-     return ${results[$(( $picked - 1 ))]}
-# If only ine result is found, display it
+     echo name:  ${results[$(( $picked - 1 ))]%:*:*}
+     XX=${results[$(( $picked - 1 ))]#*:} 
+     echo Phone Number:  ${XX%:*} 
+     echo Email:  ${results[$(( $picked - 1 ))]#*:*:} 
+     echo 
+     rst=${results[$(( $picked - 1 ))]}
+     return 2
+# If only one result is found, display it
   elif [ $count -eq 1 ] ; then
-     echo ${results[picked]}
-     return ${results[picked]}
+     echo
+     echo name:  ${results[0]%:*:*}
+     XX=${results[0]#*:} 
+     echo Phone Number:  ${XX%:*} 
+     echo Email:  ${results[0]#*:*:} 
+     echo 
+      rst=${results[0]}
+     return 2
+    
 # If no result inform the user
   else
-     echo $name does not exist in the database
-     return 0
+     echo The name $name does not exist in Contacts
+     rst=$results
+     return 3
   fi
 
   echo search end
@@ -202,44 +216,170 @@ edit(){
 # This function takes input from the user to use to change existing
 # contacts
 
-echo start edit
 search $1 1
-returned_entry=$?
-# WHAT IF REPLACEMENT NAME EXISTS
-if [[ $2 -eq 1 ]] ; then
-    old_name=$1
-    # Get new entry from the user
+if [ $? -eq 1 ] ; then
+    # Seeking confirmation before deleting
     while true
         do
-        echo -n "Please enter the new name to replace $1: "
-        read new_name
-        search $new_name 1
-        if [ $? -eq 0 ] ; then
-          echo replacing $old_name with $new_name
-          break
+        search $1 2
+        echo -n 'EDIT the above contact (Y/N): '
+        read confirmation
+        if [[ $confirmation =~  ^[YNyn]$ ]]; then
+            break
         fi
-        echo $new_name exists in the database
     done
+    if [[ $confirmation =~ [Yy] ]] ; then
+        while true
+            do
+            echo -n "Please enter the new name to replace $1: "
+            read new_name
+            search $new_name 1
+            if [ $? -eq 0 ] ; then
+               echo $new_name is not in Contacts
+               break
+            fi
+            echo $new_name exists in the database
+        done
+        echo
+        echo editing .....
+        search $1 2
+        search_return=$?
+        echo 
+        echo replacing $1 with $new_name .....
+        echo
+        rst2=${rst/$1/$new_name}
+        sed -i "s/$rst/$rst2/" ./Contacts
+        echo editing complete
+    else
+        echo No Editing done
+        echo
+    fi
+else
+    echo $1 does not exist in contacts
 fi
-echo
-echo editing .....
-sed -i "s/$old_name/$new_name/" ./Contacts
-echo editing complete
-echo end edit
-echo
-	
+ 
 }
 
 delete(){
 # This function should enable you to delete a contact
 #
 echo start delete
-entry='kevin:56:g@G'
-sed -i "/$entry/d" ./Contacts 
+#entry='kevin:56:g@G'
+search $1 2
+search_return=$?
+#echo search_return $search_return
+if [ $search_return == "3" ] ; then
+    echo 
+    echo $1 does not exist in contacts 
+    echo 
+else
+    # Seeking confirmation before deleting
+    echo 
+    while true
+        do
+	echo -n 'DELETE the above contact (Y/N): '
+	read confirmation
+        if [[ $confirmation =~  ^[YNyn]$ ]]; then
+           break
+        fi
+      done
+
+   if [[ $confirmation =~ [Yy] ]] ; then
+       # Remove the contact
+       sed -i "/$rst/d" ./Contacts
+       # Remove the empty line remaining
+       sed -i "/^ *$/d" ./Contacts
+       echo $1 has been deleted
+       echo 
+   else
+       echo $1 has NOT been deleted
+   fi
+fi
+ 
 echo end delete
 }
 
-add_entries
+main(){
+#This function 
+
+while true
+    do
+    echo -n 'Prompt >> '
+    read action
+
+    # Call add_entries function if add is typed
+    if [[ $action =~ ^add$ ]] ; then
+        add_entries 
+
+    # Call search function if search <name> is typed
+    elif [[ $action =~ ^search[[:space:]]+[[:alnum:]]*$ ]] ; then
+        input_name=${action/search/}  # Retrieve the name 
+        search $input_name 2
+
+    # Call edit fuction if edit <name> is typed
+    elif [[ $action =~ ^edit[[:space:]]+[[:alpha:]][[:alnum:]]*$ ]] ; then
+        input_name=${action/edit/}  # Retrieve the name 
+        edit $input_name 
+
+    # Call delete function if delete <name> is typed
+    elif [[ $action =~ ^delete[[:space:]]+[[:alpha:]][[:alnum:]]*$ ]] ; then
+        input_name=${action/delete/}  # Retrieve the name 
+        delete $input_name 
+
+    # Provide help information if help <command> is typed
+    elif [[ $action =~ ^help[[:space:]]+[[:alnum:]]*$ ]] ; then
+        input_command=${action/\help/} # Retrieve command
+        if [ $input_command == "add" ] ; then
+            echo usage: add
+            echo This command is used to add entries to contact list
+            echo
+        elif [ $input_command == "search" ] ; then
+            echo 'usage: search <name>'
+            echo This command is used to search the given name
+            echo
+        elif [ $input_command == "edit" ] ; then
+            echo 'Usage: edit <name>'
+            echo Used to edit existing Contact names
+            echo
+        elif [ $input_command == "delete" ] ; then
+            echo 'Usage: delete <name>'
+            echo used to delete Contact entries
+            echo
+        elif [ $input_command == "q" ] ; then
+            echo 'Usage : q '
+            echo Exits the progam
+            echo
+        else 
+            echo $input_command is not a valid command
+            echo
+        fi
+
+    # Exits the program when q is typed
+    elif [[ $action =~ ^q$ ]] ; then
+        echo else option
+        echo $action
+        break
+
+    # If the input is not a valid command
+    # display the following information
+    else
+        echo
+        echo Please enter one of the following commands:
+        echo "    add "
+        echo "    search <name>"
+        echo "    edit <name>"
+        echo "    delete <name>"
+        echo "    help <command>"
+        echo 
+    fi
+done
+
+}
+
+#add_entries
 #search
 #edit
-#delete
+#delete job 2
+main
+
+
